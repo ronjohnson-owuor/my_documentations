@@ -1,0 +1,183 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red51\green51\blue51;\red165\green165\blue165;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\b\f0\fs52\lang9 How to upload files to s3 from laravel in 2023 (written on 04/11/23)\par
+\par
+\cf1\b0\fs36 The most difficult part is not even the laravel, its the setting up of the aws in order to connect with laravel after that your code will be easy.\par
+video reffrence:\ul https://www.youtube.com/watch?v=5tFMj_0IAxU&t=17s\par
+\cf2\par
+STEP1:Creating an IAM user group and users\par
+\cf1\ulnone\fs28 > go to your aws account and login,then search for Iam from the services and click on it.\par
+>\ul Next is to create a user group\ulnone :when you are in your IAM dashboard,on the left dashboard panel, under "Access management" click "User groups"\par
+You will be taken to a table displaying all your groups you have created.Click on the button written "create group" which might be orange in color.\par
+\par
+These are the things you need to do while creating your group\par
+\ul 1.user group name \ulnone => enter the name of your group can be anything you want but make sure there is no space between the characters.\par
+2.\ul Attach permissions policies \ulnone => under here search for "s3Fullaccess" and check the "AmazonS3FullAccess" checkbox.This  allow the group to make changes  to the s3 bucket.\par
+\par
+\b Then click on "create group button" and your group will be created with all your permissions.\par
+\b0\par
+after creating your group,you need to ad users to your group so that is the next step.\par
+>Now go back to users and click create users and fill in the following input fields\par
+\i 1.user name =>enter the name of your user.\par
+\b\i0 note:Dont check the "provide user access to the aws management console-optional" checkbox.\par
+\b0 then click next button.\par
+\i 2.next is to add the user to the group we had created earlier.Look for the group we had created and check on it to add the user to the group\par
+\par
+\i0 then click next and \b dont add any tags \b0 just click next and click \b  create user \b0  button.\par
+Now your user is all set up next step is to create access key for the user.\par
+\i >click on the user you just create and navigate to \b security credentials \b0\par
+>scroll down to access keys and click \b  create access key\par
+\b0 >on the 6 use cases (command interface,local code,application running on an aws compute service,third party service,third-party service,application running outside aws,other) select on the \b  third-party service \b0  option and click \b next.\b0\par
+>Leave the tags blank dont add any tags. and click \b create access key.\par
+\b0\i0\par
+Now your access key has been created and you have been given  two things \b access key \b0 and \b secret access key\b0 . Download them  and navigate to your .env file in your laravel application and set these two fields as follows\par
+\par
+\b AWS_ACCESS_KEY_ID= access key given to you by aws\par
+AWS_SECRET_ACCESS_KEY=secret access key given to you by aws.\par
+\b0 now you are set with the user and this step is complete we go to step two\par
+=============================================================\par
+==============================================================\par
+\cf2\ul\fs36 STEP 2:Create and configure s3 bucket\par
+\cf1\ulnone\fs28 search for s3 under your services and click on it then follow the following steps\par
+\i >click on create a bucket and fill in the information as given below\par
+\ul bucket name \ulnone =>name of your bucket (make it unique)\par
+\ul AWS region \ulnone => I always leave it to us-east-1 because it is the default for laravel configuration.\par
+\i0 next is \b object ownership \b0  settings \par
+\i here there are two choices \b acl disabled(recommended) \b0  and \b ACL enabled\par
+\b0 click on the second chice ACL enabled.\par
+\i0 when you click on the checkbox you will get two choices for \b object ownership\par
+1.bucket owner preffered\par
+2.object writer\par
+\b0 click on \b object writer\par
+\par
+\b0 under the Block public access settings \b  uncheck the "block all public access" for the bucket\b0\par
+aknowledge  what you just did  and click on \b create bucket button\par
+\par
+\b0 now go to your .env files and update the aws information with your new information\par
+\b AWS_DEFAULT_REGION= us-east-1 \{the region where you choose\}\par
+AWS_BUCKET=machizi \{your bucket name you just created\}\par
+AWS_URL="https://machizi.s3.amazonaws.com/" \{add this line for good url generation\}\par
+AWS_USE_PATH_STYLE_ENDPOINT=true \{change this from false to true\}\par
+\par
+\b0 After that you are ready for the next step where you configure the bucket more deeply are you ready?\par
+\par
+\cf2\ul\fs36 STEP 3:Configure the ACL on the bucket\par
+\cf1\ulnone\fs28 click on the bucket you just created and navigate to the \b permissions\b0  tabs\par
+here you will find  Bucket policy section click on \b edit \b0 button. for us we will use policy generator button on the \b top-right of our screen\b0  \par
+when you click on the policy generator.Enter the information as follows\par
+\i select type of policy => s3 bucket policy\par
+principal => * (meaning allow everything)\par
+aws service => leave it the way you found it\par
+actions => select \b all actions \b0 checkbox ("*")\par
+Amazon Resource Name (ARN)  => here go back and copy your aws arn number  under edit bucket policy page.\par
+\par
+\i0 after that click on add statement and then scroll to the bottom and  click \b  generate policy button\par
+\b0 You will be given  a nice json, copy it  and paste in the bucket policy and click on  \b save changes\b0\par
+\par
+next is to navigate to  \b edit access control list (ACL) \b0  and check on the box where it is written  "Everyone [public access]" check on the \b  list \b0  and \b read \b0  checkbox this allows the bucket to be public. and click on \b  save changes \b0\par
+\par
+Next is  to scroll to the bottom and you will find  Cross-origin resource sharing (CORS) click edit and paste the following code  then click on the save changes.\par
+\b\i\par
+[\par
+    \{\par
+        "AllowedHeaders": [],\par
+        "AllowedMethods": [\par
+            "GET",\par
+            "PUT",\par
+            "POST",\par
+            "DELETE"\par
+        ],\par
+        "AllowedOrigins": [\par
+            "*"\par
+        ],\par
+        "ExposeHeaders": []\par
+    \}\par
+]\par
+\b0\i0\par
+Remember you can edit \b the  allowedOrigin  \b0 after you have deployed your app to allow only the allewed websites to make changes,click on save changes. \par
+\par
+And now you are done all you are remaining with is to add object to your bucket\par
+\par
+        $request->validate([\par
+            'file' => 'required',\par
+        ]);\par
+        $file_extention = $request->file->getClientOriginalExtension();\par
+        $newFilename = time() .'memeitfilesassets_images'.'.'.$file_extention;\par
+        $filePath ="photos/".$newFilename;\par
+        try\{\par
+\par
+\b add file to s3 using the below command.\b0\par
+         $path = Storage::disk('s3')->put($filePath,file_get_contents($request->file));   \par
+        \} catch(Throwable $err)\{\par
+            return response() -> json([\par
+                "message" =>"image not uploaded to s3",\par
+                "succes" =>false,\par
+                "error" =>$err->getMessage()\par
+                // "filename" =>$fileName\par
+            ]);  \par
+        \}\par
+       \b get the path of the image or video or txt  after uploading\b0\par
+        $path = Storage::disk('s3')->url($filePath);\par
+\par
+\par
+remember if you are always stuck you can reffrence to this original video that helped me solve this problem\par
+link:\ul https://youtu.be/5tFMj_0IAxU \ulnone  or this {\ul\fs36{\field{\*\fldinst{HYPERLINK https://www.youtube.com/watch?v=5tFMj_0IAxU&t=17s }}{\fldrslt{https://www.youtube.com/watch?v=5tFMj_0IAxU&t=17s}}}}\ul\f0\fs36\par
+\par
+\ulnone\b !REMEMBER TO ALWAYS DOCUMENT YOUR PROBLEMS!\b0\fs28\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\cf2\ul\fs36\par
+\cf1\ulnone\fs28\par
+\b\par
+\par
+\par
+\par
+\par
+\par
+\par
+\b0\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\b\par
+\b0\par
+\par
+\cf2\par
+\cf0\b\par
+\par
+\b0\fs36\par
+\cf2\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\cf0\fs22\par
+}
+ 
